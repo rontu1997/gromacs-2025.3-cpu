@@ -1,0 +1,95 @@
+name: gromacs-tool
+description: >-
+  GROMACS 2025.3 tool for molecular dynamics simulations, structure preparation,
+  and trajectory analysis, with CPU execution, Open MPI 4.1.6, and OpenMP —
+  packaged for the PSC environment.
+version: "1.0.1"
+category: Computational Chemistry
+license: LGPL-2.1-or-later
+
+infra:
+  - name: worker
+    infra_type: container
+    image:
+      # Publish the locally built gromacs:2025.3-cpu-mpi image to this tag.
+      acr: ""
+    compute:
+      min_resources:
+        cpu: 1
+        ram: 4Gi
+        gpu: 0
+        storage: 0Gi
+      max_resources:
+        cpu: 20
+        ram: 64Gi
+        gpu: 0
+        storage: 0Gi
+      infiniband: false
+      recommended_sku:
+        - Standard_E20s_v6
+      pool_type: static
+      pool_size: 1
+
+code_environments:
+  - language: bash
+    command: >-
+      /bin/bash -c 'cd /work &&
+      exec /bin/bash "$1" > /work/logs.out 2>&1'
+      gromacs-code "/{{scriptName}}"
+    description: |
+      Bash code environment with GROMACS 2025.3 for CPU molecular dynamics,
+      structure preparation, and trajectory analysis.
+
+      Available commands:
+
+      - gmx_mpi: GROMACS preprocessing, simulation, and analysis commands
+      - mpirun / mpiexec: Launch external MPI processes with Open MPI 4.1.6
+      - bash: Shell scripting and simulation workflow orchestration
+      - cp: Copy input files and package calculation results
+
+      Can handle:
+
+      - Structure preparation and topology generation with pdb2gmx
+      - Solvation, box setup, and ion placement
+      - Run-input preparation with grompp
+      - Energy minimization and NVE, NVT, and NPT molecular dynamics
+      - Parallel CPU simulations using MPI ranks and OpenMP threads
+      - Simulation checkpoint continuation
+      - Trajectory conversion and analysis
+      - Energy, RMSD, RMSF, hydrogen-bond, and other supported analyses
+      - Simulation workflow execution, logging, and result packaging
+
+      MPI EXAMPLE:
+
+      mpirun -np 4 gmx_mpi mdrun -s /app/inputs/topol.tpr -deffnm md -ntomp 1
+
+      Select MPI ranks with mpirun -np and OpenMP threads per rank with -ntomp.
+      Keep ranks multiplied by threads per rank within the CPUs allocated to
+      the worker. This image uses external MPI; do not pass -ntmpi or -nt.
+      All MPI ranks run inside the single worker container.
+
+      FORCE FIELDS:
+
+      Use installed force-field names such as oplsaa, amber99sb-ildn,
+      charmm27, or gromos54a7. For example: pdb2gmx -ff oplsaa -water tip4p.
+
+      WATER COORDINATES:
+
+      For TIP4P, use /opt/gromacs/share/gromacs/top/tip4p.gro with a compatible
+      tip4p.itp topology. TIP4P has four coordinate sites per water molecule.
+      spc216.gro contains three-site waters and is not a TIP4P coordinate file.
+      gmx_mpi solvate -p topol.top can update the SOL molecule count directly.
+
+      IMPORTANT PATHS:
+
+      - /app/inputs: Input structure and data files mounted by PSC (read-only)
+      - /work: Working directory and output directory captured by Discovery
+      - /opt/gromacs/bin/gmx_mpi: Installed GROMACS executable
+      - /opt/gromacs/share/gromacs/top: Installed force fields and topology data
+
+      Read inputs from /app/inputs and write calculation files in /work.
+      When invoking this code environment, set outputMounts to ["/work"].
+      Discovery captures files from /work directly, including logs.out.
+      The launcher preserves the script's exit status. No output_directory
+      parameter is required, and results are not copied back onto themselves.
+    infra_node: worker
