@@ -4,6 +4,16 @@ This image builds the official GROMACS **2025.3** source with **Open MPI**, Open
 and single-precision FFTW. It provides `gmx_mpi`, with CPU execution and external
 MPI enabled (`GMX_MPI=ON`, `GMX_THREAD_MPI=OFF`, `GMX_GPU=OFF`).
 
+## Get the repository
+
+This project is published at
+[github.com/rontu1997/gromacs-2025.3-cpu](https://github.com/rontu1997/gromacs-2025.3-cpu).
+
+```sh
+git clone https://github.com/rontu1997/gromacs-2025.3-cpu.git
+cd gromacs-2025.3-cpu
+```
+
 ## Build
 
 Run from this folder with Docker Desktop using Linux containers:
